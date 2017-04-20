@@ -28,53 +28,54 @@ TweetBeacon = function(tweet) {
 
   var circleGeometry = new THREE.CircleGeometry(radius, segments);        
   var circle = new THREE.Mesh(circleGeometry, material);
-  if( this.getScore( tweet ) == 1 )
+  // console.log( this.getScore( tweet));
+  if( this.getScore( tweet ) > 3 )
   {
     //purple red
-    this.color = 0xFF00FF;
-    mood = "trust";
+    this.color = 0xFFFF00;
+    mood = 4;
   }
-  else if ( this.getScore( tweet ) == 2 )
+  else if ( this.getScore( tweet ) <=3 && this.getScore( tweet ) > 2  )
   {
     //red
-    this.color = 0xFF0000;
-    mood = "surprise";
+    this.color = 0xFF9900;
+    mood = 2.5;
   }
- else if ( this.getScore( tweet ) == 3 )
+ else if ( this.getScore( tweet ) <=2 &&  this.getScore( tweet ) > 1 )
   {
     //orange
-    this.color = 0xFFA500;
-    mood = "joy";
+    this.color = 0xFF0000 ;
+    mood = 1.5;
   }
-   else if ( this.getScore( tweet ) == 4 )
+   else if ( this.getScore( tweet ) <= 1 &&  this.getScore( tweet ) > 0 )
   {
     //yellow
-    this.color = 0xFFFF00;
-    mood = "anticipation";
+    this.color = 0xFF3399;
+    mood = 0.5;
   }
-    else if ( this.getScore( tweet ) == -1 )
+    else if ( this.getScore( tweet ) < -3 )
   {
     //purple
-    this.color = 0x800080;
-    mood = "angry";
+    this.color = 0x0000FF;
+    mood = -4;
   }
-     else if ( this.getScore( tweet ) == -2 )
+     else if ( this.getScore( tweet ) <-2 && this.getScore( tweet ) >= -3 )
   {
     //dark blue
-    this.color = 0x000080;
-    mood = "fear";
+    this.color = 0x006600;
+    mood = -2.5;
   }
-    else if ( this.getScore( tweet ) == -3 )
+    else if (this.getScore( tweet ) <-1 && this.getScore( tweet ) >= -2)
   {
     //light blue
-    this.color = 0x00FFFF;
-    mood = "disgust";
+    this.color = 0x999966;
+    mood = -1.5;
   }
-    else if ( this.getScore( tweet ) == -4 )
+    else if ( this.getScore( tweet ) < 0 && this.getScore( tweet ) >= -1 )
   {
     //green
-    this.color = 0x008000;
-    mood = "sadness";
+    this.color = 0x660000;
+    mood = -0.5;
   }
   // if (tweet.sentiment.score < 0) {
   //   this.color = 0xFF0000;
@@ -140,66 +141,21 @@ var circleGeometry = new THREE.OctahedronGeometry(radius);
 //getScore:
 TweetBeacon.prototype.getScore = function( tweet )
 {
+  sentiment = new Sentimood();
+  var content = tweet.text.toLowerCase() ;
+  var positive = sentiment.positivity( content ).comparative;
+  var negative = sentiment.negativity( content ).comparative;
+  if (isNaN(positive)){positive = 0;}
+  if(isNaN(negative)){negative = 0;}
+  // else{console.log(content);
+  //   console.log(positive);}
+  return positive - negative;
 //   if (!this.tweet || !this.tweet.place || !this.tweet.lang) return;
 //   if (!this.tweet.text) return;
 //   if (this.tweet === "undefined") return;
   
 //   console.log( this.tweet.text );
-  var positiveWords = [
-     'excellent', 'amazing', 'beautiful', 'nice', 'marvelous', 'magnificent', 'fabulous', 'astonishing', 'fantastic', 'peaceful', 'fortunate', 
-     'brilliant', 'glorious', 'cheerful', 'gracious', 'grateful', 'splendid', 'superb', 'honorable', 'thankful', 'inspirational',
-     'ecstatic', 'victorious', 'virtuous', 'proud', 'wonderful', 'lovely', 'delightful'
-  ];
-  var happyWords = [
-    'happy', 'lucky', 'awesome', 'excited', 'fun', 'amusing', 'amused', 'pleasant', 'pleasing', 'glad', 'enjoy',
-    'jolly', 'delightful', 'joyful', 'joyous', ':-)', ':)', ':-D', ':D', '=)','☺'
-  ];
-  var lovelyWords = [
-    'love', 'adore', 'blissful', 'heartfelt', 'loving', 'lovable', 'sweetheart', 'darling', 'kawaii', 'married', 'engaged'
-  ];
-  var supriseWords = [
-  'surprised','amazed','marvel','wonder','cool'
-  ];
 
-  var negativeWords = [
-    'unhappy', 'bad', 'sorry', 'annoyed', 'dislike', 'anxious', 'ashamed', 'cranky', 'crap', 'crappy', 'envy', 
-    'awful', 'bored', 'boring', 'bothersome', 'bummed', 'burned', 'chaotic', 'defeated', 'devastated', 'stressed',
-    'disconnected', 'discouraged', 'dishonest', 'doomed', 'dreadful', 'embarrassed', 'evicted', 'freaked out', 'frustrated', 'stupid',
-    'guilty', 'hopeless', 'horrible', 'horrified', 'humiliated', 'ignorant', 'inhumane', 'cruel', 'insane', 'insecure',
-    'nervous', 'offended', 'oppressed', 'overwhelmed', 'pathetic', 'powerless', 'poor', 'resentful', 'robbed', 'screwed'
-  ];
-  var sadWords = [
-    'sad', 'alone', 'anxious', 'depressed', 'disappointed', 'disappointing', 'sigh', 'sobbing', 'crying', 'cried', 
-    'dumped', 'heartbroken', 'helpless', 'hurt', 'miserable', 'misunderstood', 'suicidal', ':-(', ':(', '=(', ';('
-  ];
-  var angryWords = [
-    'hate', 'damn', 'angry', 'betrayed', 'bitched','disgust', 'disturbed', 'furious', 'harassed', 'hateful', 'hostile', 'insulted',
-    'irritable', 'jealous', ' rage ', 'pissed'
-
-  ];
-  var sickWords = [
-    'sick', ' ill ', 'under weather', 'throw up', 'threw up', 'throwing up', 'puke', 'puking', 'pain', 'hangover', 'intoxicated'
-  ];
-
-
-  if (positiveWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return 1;
-    } else if (happyWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return 2;
-    } else if (lovelyWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return 3;
-    } else if (supriseWords.some(function(v){ return tweet.text.toLowerCase().indexOf(v) !== -1 ;})){
-      return 4;
-    } else if (negativeWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return -1;
-    } else if (sadWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return -2;
-    } else if (angryWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return -3;
-    } else if (sickWords.some(function(v) { return tweet.text.toLowerCase().indexOf(v) !== -1; })) {
-      return -4;
-    }
-    else return 0;
 }
 
 // TweetBeacon.prototype.addShockwave = function () {

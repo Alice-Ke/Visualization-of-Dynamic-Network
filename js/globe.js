@@ -115,6 +115,9 @@ var material = new THREE.ShaderMaterial({
 
 var skybox = new THREE.Mesh(new THREE.CubeGeometry(100000, 100000, 100000), material);
 scene.add(skybox);
+// try google translation
+
+
 
 // Function for adding the earth, atmosphere, and the moon
 // var pivot;
@@ -187,38 +190,38 @@ function latLonToVector3(lat, lon) {
 };
 
 // Takes two points on the globe and turns them into a bezier curve point array
-function bezierCurveBetween(startVec3, endVec3) {
-  var distanceBetweenPoints = startVec3.clone().sub(endVec3).length();
+// function bezierCurveBetween(startVec3, endVec3) {
+//   var distanceBetweenPoints = startVec3.clone().sub(endVec3).length();
 
-  var anchorHeight = 600 + distanceBetweenPoints * 0.4;
+//   var anchorHeight = 600 + distanceBetweenPoints * 0.4;
 
-  var mid = startVec3.clone().lerp(endVec3, 0.5);
-  var midLength = mid.length();
-  mid.normalize();
-  mid.multiplyScalar(midLength + distanceBetweenPoints * 0.4);
+//   var mid = startVec3.clone().lerp(endVec3, 0.5);
+//   var midLength = mid.length();
+//   mid.normalize();
+//   mid.multiplyScalar(midLength + distanceBetweenPoints * 0.4);
 
-  var normal = (new THREE.Vector3()).subVectors(startVec3, endVec3);
-  normal.normalize();
+//   var normal = (new THREE.Vector3()).subVectors(startVec3, endVec3);
+//   normal.normalize();
 
-  var anchorScalar = distanceBetweenPoints * 0.4;
+//   var anchorScalar = distanceBetweenPoints * 0.4;
 
-  var startAnchor = startVec3;
-  var midStartAnchor = mid.clone().add(normal.clone().multiplyScalar(anchorScalar));
-  var midEndAnchor = mid.clone().add(normal.clone().multiplyScalar(-anchorScalar));
-  var endAnchor = endVec3;
+//   var startAnchor = startVec3;
+//   var midStartAnchor = mid.clone().add(normal.clone().multiplyScalar(anchorScalar));
+//   var midEndAnchor = mid.clone().add(normal.clone().multiplyScalar(-anchorScalar));
+//   var endAnchor = endVec3;
 
-  // Now make a bezier curve
-  var splineCurveA = new THREE.CubicBezierCurve3(startVec3, startAnchor, midStartAnchor, mid);
-  var splineCurveB = new THREE.CubicBezierCurve3(mid, midEndAnchor, endAnchor, endVec3);
+//   // Now make a bezier curve
+//   var splineCurveA = new THREE.CubicBezierCurve3(startVec3, startAnchor, midStartAnchor, mid);
+//   var splineCurveB = new THREE.CubicBezierCurve3(mid, midEndAnchor, endAnchor, endVec3);
 
-  var vertexCountDesired = Math.floor(distanceBetweenPoints * 0.02 + 6);
+//   var vertexCountDesired = Math.floor(distanceBetweenPoints * 0.02 + 6);
 
-  var points = splineCurveA.getPoints(vertexCountDesired);
-  points = points.splice(0, points.length - 1);
-  points = points.concat(splineCurveB.getPoints(vertexCountDesired));
+//   var points = splineCurveA.getPoints(vertexCountDesired);
+//   points = points.splice(0, points.length - 1);
+//   points = points.concat(splineCurveB.getPoints(vertexCountDesired));
 
-  return points;
-}
+//   return points;
+// }
 
 var geoms = [];
 (function () {
@@ -366,7 +369,9 @@ function addBeacon (position, tweet) {
   // console.log(circle.position);
 //   if (!tweet || !tweet.place || !tweet.lang) return;
   var beacon = new TweetBeacon(tweet);
-  countryCode = tweet.place.country;
+  if(typeof tweet.place.country != "undefined"){
+  countryCode = tweet.place.country;}
+  // console.log(countryCode);
 //   if( tweet.place.country == 'United States') { countryCode = 'US';}
   beacon.position.x = position.x;
   beacon.position.y = position.y;
@@ -470,7 +475,8 @@ function addOverlay() {
 var globe;
 function addGlobe(){
    globe = new THREE.Object3D ();
-	globe.scale.set (610, 610, 610);
+	// globe.scale.set (610, 610, 610);
+   globe.scale.set (650, 650, 650);
 	
 	globe.rotation.y = - Math.PI/2;
 	scene.add (globe);
@@ -481,7 +487,10 @@ function addCountries(){
     for (var name in geoInfo) {
     geometry = new Map3DGeometry (geoInfo[name], 1);
     globe.add (geoInfo[name].mesh = new THREE.Mesh (geometry, gold));
-    geoInfo[name].scales = 1;
+    geoInfo[name].scales = 2;
+    geoInfo[name].score = 0;
+    geoInfo[name].average = 0;
+    geoInfo[name].number = 0;
     geoInfo[name].colorR = 255;
     geoInfo[name].colorB = 255;
     geoInfo[name].colorG = 255;
@@ -495,7 +504,8 @@ function addCountries(){
 // Main render loop
 var rotation = { x: 0, y: 0 };
 function render() {
-
+//   console.log(geoInfo["United States"].average);
+// console.log(geoInfo["United Kingdom"].average);
   tweenPoint();
 
   // Draw our publish points every frame
@@ -512,12 +522,55 @@ function render() {
 //   var scaleRate = 1;
 //   var scales = 1;
   var step = 1;
-  if( mood == 'surprise' || mood == 'trust' || mood == 'joy' ||mood == 'anticipation' )
+  if ( typeof geoInfo[countryCode] != "undefined" )
   {
-   if(geoInfo[countryCode].colorB >= 5 ){
-    geoInfo[countryCode].colorB= geoInfo[countryCode].colorB - 5;}
-    if( geoInfo[countryCode].colorR <= 250 ){
-    geoInfo[countryCode].colorR = geoInfo[countryCode].colorR + 5;}
+    geoInfo[countryCode].number++;
+    geoInfo[countryCode].score =+ mood;
+    average = geoInfo[countryCode].score / geoInfo[countryCode].number;
+    geoInfo[countryCode].average = average;
+    // console.log(geoInfo[countryCode].average);
+    if (average > 0)
+    {
+      if( average >= 1 ){
+      geoInfo[countryCode].colorR = 255;
+      geoInfo[countryCode].colorG = 255;
+      geoInfo[countryCode].colorB = 0;}
+      else if( average < 1 && average >= 0.1 ){
+
+      geoInfo[countryCode].colorR = 255;
+      geoInfo[countryCode].colorG = 204;
+      geoInfo[countryCode].colorB = 0;}
+      else if( average < 0.1 && average >= 0.01 ){
+      geoInfo[countryCode].colorR = 255;
+      geoInfo[countryCode].colorG = 0;
+      geoInfo[countryCode].colorB = 0;}
+      else {
+        geoInfo[countryCode].colorR = 255;
+      geoInfo[countryCode].colorG = 51;
+      geoInfo[countryCode].colorB = 153;
+      }
+    
+    }
+    if (average < 0)
+    {
+     if( average <= -1 ){
+      geoInfo[countryCode].colorR = 0;
+      geoInfo[countryCode].colorG = 0;
+      geoInfo[countryCode].colorB = 255;}
+      else if( average <= -0.1 && average > -1 ){
+      geoInfo[countryCode].colorR = 0;
+      geoInfo[countryCode].colorG = 102;
+      geoInfo[countryCode].colorB = 0;}
+      else if( average <= -0.01 && average > -0.1  ){
+      geoInfo[countryCode].colorR = 153;
+      geoInfo[countryCode].colorG = 153;
+      geoInfo[countryCode].colorB = 102;}
+      else {
+      geoInfo[countryCode].colorR = 102;
+      geoInfo[countryCode].colorG = 0;
+      geoInfo[countryCode].colorB = 204;
+    }
+    }
   
     var r = geoInfo[countryCode].colorR;
     var g = geoInfo[countryCode].colorG;
@@ -531,49 +584,20 @@ function render() {
 	transparent: true,
 	opacity: 0.5
 	});
+
 	geoInfo[countryCode].mesh.material = materialn;
 // 	var scl
 //     console.log( geoInfo[pick].mesh.rotation);
-    geoInfo[countryCode].scales = geoInfo[countryCode].scales + 0.0003;
+    geoInfo[countryCode].scales = 1 + average;
     var tempS = geoInfo[countryCode].scales;
-	geoInfo[countryCode].mesh.scale.set(tempS,tempS,tempS);
+	 geoInfo[countryCode].mesh.scale.set(tempS,tempS,tempS);
 // 	geoInfo[countryCode].rotationsx = geoInfo[countryCode].rotations + 0.001;
 //     var tempS = geoInfo[countryCode].scales;
 // 	geoInfo[countryCode].mesh.rotation.set(0,Math.PI/4,0,Math.PI/4,0);
 }
 //   pivot.rotation.y += 0.01;
-  if( mood == 'angry' || mood == 'fear' || mood == 'disgust' ||mood == 'sadness' )
-  {
-    if( geoInfo[countryCode].colorR >= 5 ){
-    geoInfo[countryCode].colorR = geoInfo[countryCode].colorR - 5;}
 
-    if( geoInfo[countryCode].colorB <= 250 ){
-    geoInfo[countryCode].colorB = geoInfo[countryCode].colorB + 5;}
-
-    var r = geoInfo[countryCode].colorR;
-    var g = geoInfo[countryCode].colorG;
-    var b = geoInfo[countryCode].colorB;
-    
-    var color = 'rgb(' + r + ',' + g + ',' + b + ')';
-	var colorN = new THREE.Color(color);
-
-	materialn = new THREE.MeshBasicMaterial( { 
-	color: colorN,
-	transparent: true,
-	opacity: 0.5
-	});
-
-// 	materialn = new THREE.MeshBasicMaterial( { color:new THREE.Color("rgb(0,255,0)")});
-	geoInfo[countryCode].mesh.material = materialn;
-// 	var scl
-//     console.log( geoInfo[pick].mesh.rotation);
-    geoInfo[countryCode].scales = geoInfo[countryCode].scales - 0.0003;
-    var tempS = geoInfo[countryCode].scales;
-	geoInfo[countryCode].mesh.scale.set(tempS,tempS,tempS);
-// 	geoInfo[countryCode].rotationsx = geoInfo[countryCode].rotations + 0.001;
-//     var tempS = geoInfo[countryCode].scales;
-// 	geoInfo[countryCode].mesh.rotation.set(0,Math.PI/4,0,Math.PI/4,0);
-}
+// else{ console.log( countryCode );}
 
   rotation.x += (target.x - rotation.x) * 0.1;
   rotation.y += (target.y - rotation.y) * 0.1;
